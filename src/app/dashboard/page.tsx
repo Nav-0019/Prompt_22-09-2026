@@ -1,0 +1,250 @@
+"use client";
+
+import React, { useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabase';
+import { Search, Filter, Calendar, Download, Plus, CheckCircle, ShieldAlert } from 'lucide-react';
+import Link from 'next/link';
+
+interface RecentScan {
+  id: string;
+  created_at: string;
+  threat_index: number;
+  scam_type: string;
+}
+
+export default function DashboardOverview() {
+  const [scans, setScans] = useState<RecentScan[]>([]);
+  
+  useEffect(() => {
+    async function fetchData() {
+      if (!process.env.NEXT_PUBLIC_SUPABASE_URL) return;
+      const { data } = await supabase
+        .from('scans')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(5);
+      if (data) setScans(data);
+    }
+    fetchData();
+  }, []);
+
+  const totalScans = scans.length > 0 ? 384 : 0;
+  const avgThreat = scans.length > 0 ? 24 : 0;
+
+  return (
+    <div className="w-full animation-fade-in">
+      
+      {/* HEADER SECTION */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-10 gap-4 mt-6">
+        <h1 className="text-4xl font-normal text-slate-900 tracking-tight">
+          Good morning, <span className="font-bold">Security Admin!</span>
+        </h1>
+        <Link 
+          href="/scan" 
+          className="bg-[#F1651A] hover:bg-[#d95a16] text-white px-6 py-3 rounded-full font-bold shadow-[0_4px_14px_0_rgb(241,101,26,0.39)] transition-all flex items-center gap-2"
+        >
+          <Plus className="w-5 h-5" />
+          New scan
+        </Link>
+      </div>
+
+      {/* FILTER ROW */}
+      <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+        <div className="flex items-center gap-2 bg-white rounded-full shadow-sm p-1 border border-slate-100">
+          <button className="flex items-center gap-2 px-4 py-2 hover:bg-slate-50 rounded-full text-sm font-bold text-slate-700">
+            <Filter className="w-4 h-4" /> Filter
+          </button>
+          <div className="w-px h-6 bg-slate-200"></div>
+          <button className="flex items-center gap-2 px-4 py-2 hover:bg-slate-50 rounded-full text-sm font-bold text-slate-700">
+             Last month
+          </button>
+          <div className="w-px h-6 bg-slate-200"></div>
+          <button className="flex items-center gap-2 px-4 py-2 hover:bg-slate-50 rounded-full text-sm font-bold text-slate-700">
+            <Download className="w-4 h-4" /> Export
+          </button>
+        </div>
+
+        <div className="flex items-center bg-white rounded-full shadow-sm border border-slate-100 px-4 py-2 w-full md:w-64">
+          <Search className="w-4 h-4 text-slate-400 mr-2" />
+          <input 
+            type="text" 
+            placeholder="Search" 
+            className="bg-transparent border-none focus:outline-none text-sm w-full font-medium"
+          />
+        </div>
+      </div>
+
+      {/* 3-COLUMN GRID LAYOUT (Image 1 Inspiration) */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        {/* COLUMN 1 */}
+        <div className="flex flex-col gap-6">
+          <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="font-bold text-slate-800 text-lg">Active Scanner</h3>
+              <button className="bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-bold px-3 py-1.5 rounded-full transition-colors flex items-center gap-1">
+                <Plus className="w-3 h-3" /> Upgrade
+              </button>
+            </div>
+            
+            {/* "Credit Card" Style Status Block */}
+            <div className="bg-slate-900 rounded-2xl p-6 relative overflow-hidden mb-6 text-white shadow-xl h-48 flex flex-col justify-between">
+               <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-5 rounded-full -mr-10 -mt-10 pointer-events-none"></div>
+               <div className="absolute bottom-0 right-0 w-16 h-16 bg-[#F1651A] rounded-tl-3xl opacity-90"></div>
+               
+               <div className="flex justify-between items-start relative z-10">
+                 <div className="flex items-center gap-2">
+                   <img src="/logo.png" className="w-8 h-8 opacity-80" alt="logo" />
+                   <span className="font-bold tracking-wider opacity-80">PRO</span>
+                 </div>
+                 <div className="w-8 h-8 rounded-full border-2 border-white/20 flex items-center justify-center">
+                   <div className="w-4 h-4 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.8)]"></div>
+                 </div>
+               </div>
+               
+               <div className="relative z-10">
+                 <p className="text-xs text-slate-400 font-bold tracking-widest mb-1">API USAGE</p>
+                 <div className="flex justify-between items-end">
+                   <p className="font-mono text-xl tracking-widest">384 <span className="text-sm text-slate-400">/ 500</span></p>
+                   <p className="text-xs font-bold text-slate-400">RENEWS 09/26</p>
+                 </div>
+               </div>
+            </div>
+
+            <div className="flex justify-between items-center py-2 border-b border-slate-100">
+              <div className="flex items-center gap-2 font-bold text-slate-800 text-sm">
+                Threats Prevented
+              </div>
+              <span className="font-bold text-slate-900">142</span>
+            </div>
+            <div className="flex justify-between items-center py-4 border-b border-slate-100">
+              <div className="flex items-center gap-2 font-bold text-slate-800 text-sm">
+                False Positives
+              </div>
+              <span className="font-bold text-slate-900">12</span>
+            </div>
+          </div>
+        </div>
+
+        {/* COLUMN 2 */}
+        <div className="flex flex-col gap-6">
+          <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 h-64 flex flex-col">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="font-bold text-slate-800 text-lg">Threat Analysis</h3>
+              <button className="text-xs font-bold text-slate-500 hover:text-slate-800">View details &gt;</button>
+            </div>
+            
+            <div className="flex items-end gap-4 mb-4">
+               <h2 className="text-4xl font-bold text-slate-900 tracking-tight">154</h2>
+               <p className="text-sm font-medium text-slate-500 mb-1 leading-tight">Total threats<br/>detected</p>
+            </div>
+
+            {/* Custom Bar Chart Mock */}
+            <div className="flex-1 flex items-end gap-2 mt-auto">
+               <div className="w-1/3 bg-slate-900 rounded-t-xl h-[40%] group relative">
+                 <div className="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-800 text-white text-xs py-1 px-2 rounded">42</div>
+               </div>
+               <div className="w-1/3 bg-indigo-500 rounded-t-xl h-[60%] relative group">
+                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-8 h-8 bg-indigo-600 rounded-full border-2 border-white flex items-center justify-center text-[10px] text-white font-bold shadow-sm">
+                   +12%
+                 </div>
+               </div>
+               <div className="w-1/3 bg-slate-100 rounded-t-xl h-[20%]"></div>
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 h-64 flex flex-col relative overflow-hidden">
+            <div className="flex justify-between items-center mb-2">
+              <h3 className="font-bold text-slate-800 text-lg">Scan Volume</h3>
+              <button className="text-xs font-bold text-slate-500 hover:text-slate-800">Past 30 days v</button>
+            </div>
+            <div className="flex items-center gap-2 mb-8">
+               <h2 className="text-4xl font-bold text-slate-900 tracking-tight">384</h2>
+               <div className="bg-emerald-100 text-emerald-700 text-xs font-bold px-2 py-1 rounded">↑ 16.4%</div>
+            </div>
+
+            {/* SVG Line Chart Mock */}
+            <div className="absolute bottom-0 left-0 w-full h-32">
+               <svg viewBox="0 0 400 100" className="w-full h-full overflow-visible preserve-3d" preserveAspectRatio="none">
+                 <path d="M 0 80 Q 100 80 200 40 T 400 0" fill="none" stroke="#4F46E5" strokeWidth="3" />
+                 <path d="M 0 80 Q 100 80 200 40 T 400 0 L 400 100 L 0 100 Z" fill="url(#gradient)" className="opacity-10" />
+                 <defs>
+                   <linearGradient id="gradient" x1="0" y1="0" x2="0" y2="1">
+                     <stop offset="0%" stopColor="#4F46E5" />
+                     <stop offset="100%" stopColor="white" stopOpacity="0" />
+                   </linearGradient>
+                 </defs>
+                 <circle cx="200" cy="40" r="4" fill="white" stroke="#4F46E5" strokeWidth="2" />
+               </svg>
+               {/* Tooltip on Line */}
+               <div className="absolute left-[50%] top-[20%] -translate-x-1/2 -translate-y-full bg-white shadow-md rounded text-[10px] font-bold px-2 py-1 border border-slate-100 text-slate-600">
+                 Sep 12
+               </div>
+               <div className="absolute left-[50%] top-[20%] w-px h-full bg-slate-200 border-l border-dashed border-slate-300"></div>
+            </div>
+          </div>
+        </div>
+
+        {/* COLUMN 3 */}
+        <div className="flex flex-col gap-6">
+          <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 flex flex-col items-center h-64">
+             {/* Semi Circle Gauge Mock */}
+             <div className="relative w-48 h-24 overflow-hidden mt-6">
+                <div className="w-48 h-48 rounded-full border-[12px] border-slate-100 absolute top-0 left-0"></div>
+                {/* Red segment (High Risk) */}
+                <div className="w-48 h-48 rounded-full border-[12px] border-transparent border-t-rose-500 border-l-rose-500 absolute top-0 left-0 transform -rotate-45"></div>
+                {/* Yellow segment (Medium Risk) */}
+                <div className="w-48 h-48 rounded-full border-[12px] border-transparent border-t-amber-400 absolute top-0 left-0 transform rotate-45"></div>
+                {/* Blue segment (Low Risk) */}
+                <div className="w-48 h-48 rounded-full border-[12px] border-transparent border-r-indigo-500 absolute top-0 left-0 transform rotate-45"></div>
+             </div>
+             
+             <div className="absolute mt-14 flex flex-col items-center">
+               <h2 className="text-4xl font-bold text-slate-900">{avgThreat}%</h2>
+               <p className="text-xs font-medium text-slate-500">Avg Threat Index</p>
+             </div>
+
+             <div className="flex items-center gap-6 mt-auto">
+               <div className="flex items-center gap-2">
+                 <div className="w-2 h-2 rounded-full bg-rose-500"></div>
+                 <span className="text-[10px] font-bold text-slate-600 uppercase">High</span>
+               </div>
+               <div className="flex items-center gap-2">
+                 <div className="w-2 h-2 rounded-full bg-amber-400"></div>
+                 <span className="text-[10px] font-bold text-slate-600 uppercase">Med</span>
+               </div>
+               <div className="flex items-center gap-2">
+                 <div className="w-2 h-2 rounded-full bg-indigo-500"></div>
+                 <span className="text-[10px] font-bold text-slate-600 uppercase">Low</span>
+               </div>
+             </div>
+          </div>
+
+          <div className="bg-indigo-500 p-6 rounded-[2rem] shadow-sm h-64 flex flex-col relative overflow-hidden text-white">
+            <div className="flex justify-between items-center mb-2 z-10">
+              <h3 className="font-bold text-indigo-50 text-lg">Top Scam Vector</h3>
+              <button className="text-xs font-bold text-indigo-200 hover:text-white">Past 30 days v</button>
+            </div>
+            
+            <div className="mt-4 z-10">
+               <h2 className="text-4xl font-bold mb-1">Invoice</h2>
+               <div className="bg-indigo-400/50 inline-block text-white text-xs font-bold px-2 py-1 rounded flex items-center gap-1 w-max">
+                 ↓ 21.8%
+               </div>
+            </div>
+
+            {/* Background decorative curve */}
+            <svg viewBox="0 0 400 200" className="absolute bottom-0 left-0 w-full h-full opacity-30 pointer-events-none" preserveAspectRatio="none">
+                 <path d="M 0 150 Q 150 150 250 100 T 400 50" fill="none" stroke="white" strokeWidth="2" />
+                 <circle cx="250" cy="100" r="4" fill="white" />
+            </svg>
+            <div className="absolute left-[62%] top-[45%] bg-white text-indigo-600 shadow-md rounded text-[10px] font-bold px-2 py-1">
+                 Sep 18
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  );
+}

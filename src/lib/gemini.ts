@@ -1,7 +1,7 @@
 import { GoogleGenAI } from '@google/genai';
 
-// Initialize the Gemini client. It automatically picks up GEMINI_API_KEY from the environment.
-const ai = new GoogleGenAI({});
+// Initialize the Gemini client explicitly with the API key
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 export interface ScanResult {
   threat_index: number;

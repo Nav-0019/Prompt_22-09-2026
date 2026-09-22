@@ -5,6 +5,7 @@ import { Search, Settings, Bell, Home, Shield, BookOpen, Moon, Sun, LogOut, User
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { logout } from '@/app/login/actions';
+import { supabase } from '@/lib/supabase';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -13,6 +14,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [showSettings, setShowSettings] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [isNightMode, setIsNightMode] = useState(false);
+  const [user, setUser] = useState<{ email?: string; name?: string; picture?: string } | null>(null);
+
+  React.useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        setUser({
+          email: user.email,
+          name: user.user_metadata?.full_name || 'Security Admin',
+          picture: user.user_metadata?.avatar_url || ''
+        });
+      }
+    });
+  }, []);
 
   const toggleNightMode = () => {
     const nextState = !isNightMode;
@@ -140,15 +154,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <div className="relative ml-2">
               <button 
                 onClick={() => { setShowProfile(!showProfile); setShowSettings(false); setShowNotifications(false); }}
-                className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#F1651A] to-orange-300 shadow-sm border-2 border-white cursor-pointer"
-              ></button>
+                className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#F1651A] to-orange-300 shadow-sm border-2 border-white cursor-pointer overflow-hidden flex items-center justify-center"
+              >
+                {user?.picture ? (
+                  <img src={user.picture} alt="Profile" className="w-full h-full object-cover" />
+                ) : (
+                  <User className="w-5 h-5 text-white" />
+                )}
+              </button>
               
               {/* Profile Dropdown */}
               {showProfile && (
                 <div className="absolute top-full mt-4 right-0 w-64 bg-white/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/50 overflow-hidden z-50">
                   <div className="px-5 py-4 border-b border-slate-100 bg-white/50">
-                    <h3 className="font-bold text-slate-800">Security Admin</h3>
-                    <p className="text-xs text-slate-500">admin@phishinginspector.com</p>
+                    <h3 className="font-bold text-slate-800">{user?.name || 'Security Admin'}</h3>
+                    <p className="text-xs text-slate-500">{user?.email || 'admin@phishinginspector.com'}</p>
                   </div>
                   <div className="p-2">
                     <button className="w-full text-left p-3 hover:bg-slate-50 rounded-xl transition-colors flex items-center gap-3">

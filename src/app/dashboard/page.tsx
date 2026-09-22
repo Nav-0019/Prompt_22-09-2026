@@ -14,22 +14,43 @@ interface RecentScan {
 
 export default function DashboardOverview() {
   const [scans, setScans] = useState<RecentScan[]>([]);
+  const [userName, setUserName] = useState('Security Admin');
   
   useEffect(() => {
     async function fetchData() {
+      // Get User Name
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user && user.user_metadata?.full_name) {
+        // Extract first name
+        const firstName = user.user_metadata.full_name.split(' ')[0];
+        setUserName(firstName);
+      }
+
       if (!process.env.NEXT_PUBLIC_SUPABASE_URL) return;
       const { data } = await supabase
         .from('scans')
         .select('*')
         .order('created_at', { ascending: false })
-        .limit(5);
+        .limit(200);
       if (data) setScans(data);
     }
     fetchData();
   }, []);
 
-  const totalScans = scans.length > 0 ? 384 : 0;
-  const avgThreat = scans.length > 0 ? 24 : 0;
+  const totalScans = scans.length;
+  const avgThreat = scans.length > 0 ? Math.round(scans.reduce((acc, scan) => acc + scan.threat_index, 0) / scans.length) : 0;
+  const threatsPrevented = scans.filter(s => s.threat_index >= 70).length;
+  const safeChecks = scans.filter(s => s.threat_index < 30).length;
+  
+  // Calculate Top Scam Vector
+  const scamCounts = scans.reduce((acc, curr) => {
+    if (curr.scam_type && curr.scam_type !== 'None') {
+      acc[curr.scam_type] = (acc[curr.scam_type] || 0) + 1;
+    }
+    return acc;
+  }, {} as Record<string, number>);
+  
+  const topScamVector = Object.entries(scamCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || 'Unknown';
 
   return (
     <div className="w-full animation-fade-in">
@@ -37,7 +58,7 @@ export default function DashboardOverview() {
       {/* HEADER SECTION */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-10 gap-4 mt-6">
         <h1 className="text-4xl font-normal text-slate-900 tracking-tight">
-          Good morning, <span className="font-bold">Security Admin!</span>
+          Good morning, <span className="font-bold">{userName}!</span>
         </h1>
         <Link 
           href="/scan" 
@@ -103,10 +124,10 @@ export default function DashboardOverview() {
                </div>
                
                <div className="relative z-10">
-                 <p className="text-xs text-slate-400 font-bold tracking-widest mb-1">API USAGE</p>
+                 <p className="text-xs text-slate-400 font-bold tracking-widest mb-1">SCANS PERFORMED</p>
                  <div className="flex justify-between items-end">
-                   <p className="font-mono text-xl tracking-widest">384 <span className="text-sm text-slate-400">/ 500</span></p>
-                   <p className="text-xs font-bold text-slate-400">RENEWS 09/26</p>
+                   <p className="font-mono text-xl tracking-widest">{totalScans}</p>
+                   <p className="text-xs font-bold text-slate-400">UNLIMITED</p>
                  </div>
                </div>
             </div>
@@ -115,13 +136,13 @@ export default function DashboardOverview() {
               <div className="flex items-center gap-2 font-bold text-slate-800 text-sm">
                 Threats Prevented
               </div>
-              <span className="font-bold text-slate-900">142</span>
+              <span className="font-bold text-slate-900">{threatsPrevented}</span>
             </div>
             <div className="flex justify-between items-center py-4 border-b border-slate-100">
               <div className="flex items-center gap-2 font-bold text-slate-800 text-sm">
-                False Positives
+                Safe Checks
               </div>
-              <span className="font-bold text-slate-900">12</span>
+              <span className="font-bold text-slate-900">{safeChecks}</span>
             </div>
           </div>
         </div>
@@ -135,7 +156,7 @@ export default function DashboardOverview() {
             </div>
             
             <div className="flex items-end gap-4 mb-4">
-               <h2 className="text-4xl font-bold text-slate-900 tracking-tight">154</h2>
+               <h2 className="text-4xl font-bold text-slate-900 tracking-tight">{threatsPrevented}</h2>
                <p className="text-sm font-medium text-slate-500 mb-1 leading-tight">Total threats<br/>detected</p>
             </div>
 
@@ -156,11 +177,11 @@ export default function DashboardOverview() {
           <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 h-64 flex flex-col relative overflow-hidden">
             <div className="flex justify-between items-center mb-2">
               <h3 className="font-bold text-slate-800 text-lg">Scan Volume</h3>
-              <button className="text-xs font-bold text-slate-500 hover:text-slate-800">Past 30 days v</button>
+              <button className="text-xs font-bold text-slate-500 hover:text-slate-800">All time v</button>
             </div>
             <div className="flex items-center gap-2 mb-8">
-               <h2 className="text-4xl font-bold text-slate-900 tracking-tight">384</h2>
-               <div className="bg-emerald-100 text-emerald-700 text-xs font-bold px-2 py-1 rounded">↑ 16.4%</div>
+               <h2 className="text-4xl font-bold text-slate-900 tracking-tight">{totalScans}</h2>
+               <div className="bg-emerald-100 text-emerald-700 text-xs font-bold px-2 py-1 rounded">Active</div>
             </div>
 
             {/* SVG Line Chart Mock */}
@@ -227,9 +248,9 @@ export default function DashboardOverview() {
             </div>
             
             <div className="mt-4 z-10">
-               <h2 className="text-4xl font-bold mb-1">Invoice</h2>
+               <h2 className="text-3xl font-bold mb-1 truncate">{topScamVector}</h2>
                <div className="bg-indigo-400/50 inline-block text-white text-xs font-bold px-2 py-1 rounded flex items-center gap-1 w-max">
-                 ↓ 21.8%
+                 Analyzed via AI
                </div>
             </div>
 

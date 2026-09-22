@@ -21,14 +21,14 @@ export default function DashboardOverview() {
   const [showTimeDropdown, setShowTimeDropdown] = useState(false);
   
   useEffect(() => {
+    const supabase = createClient();
+    let channel: any;
+
     async function fetchData() {
-      const supabase = createClient();
-      
       // Get User Name
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         const fullName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'Security Admin';
-        // Extract first name
         const firstName = fullName.split(' ')[0];
         setUserName(firstName);
       }
@@ -40,8 +40,20 @@ export default function DashboardOverview() {
         .order('created_at', { ascending: false })
         .limit(200);
       if (data) setScans(data);
+
+      // Subscribe to real-time changes
+      channel = supabase
+        .channel('dashboard-scans')
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'scans' }, (payload) => {
+          setScans((current) => [payload.new as RecentScan, ...current].slice(0, 200));
+        })
+        .subscribe();
     }
     fetchData();
+
+    return () => {
+      if (channel) supabase.removeChannel(channel);
+    };
   }, []);
 
   const filteredScans = scans.filter(scan => {
@@ -81,6 +93,10 @@ export default function DashboardOverview() {
   }, {} as Record<string, number>);
   
   const topScamVector = Object.entries(scamCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || 'Unknown';
+
+  const totalAnalyzed = threatsPrevented + safeChecks || 1;
+  const threatHeight = Math.max(10, Math.round((threatsPrevented / totalAnalyzed) * 100));
+  const safeHeight = Math.max(10, Math.round((safeChecks / totalAnalyzed) * 100));
 
   // Note: the toggles are replaced by direct setFilter / setTimeRange in the dropdown UI
 
@@ -255,17 +271,18 @@ export default function DashboardOverview() {
                <p className="text-sm font-medium text-slate-500 mb-1 leading-tight">Total threats<br/>detected</p>
             </div>
 
-            {/* Custom Bar Chart Mock */}
+            {/* Dynamic Bar Chart */}
             <div className="flex-1 flex items-end gap-2 mt-auto">
-               <div className="w-1/3 bg-slate-900 rounded-t-xl h-[40%] group relative">
-                 <div className="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-800 text-white text-xs py-1 px-2 rounded">42</div>
-               </div>
-               <div className="w-1/3 bg-indigo-500 rounded-t-xl h-[60%] relative group">
-                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-8 h-8 bg-indigo-600 rounded-full border-2 border-white flex items-center justify-center text-[10px] text-white font-bold shadow-sm">
-                   +12%
+               <div className="w-1/2 bg-rose-500 rounded-t-xl relative group transition-all duration-1000" style={{ height: `${threatHeight}%` }}>
+                 <div className="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-800 text-white text-xs py-1 px-2 rounded">
+                   {threatsPrevented}
                  </div>
                </div>
-               <div className="w-1/3 bg-slate-100 rounded-t-xl h-[20%]"></div>
+               <div className="w-1/2 bg-emerald-400 rounded-t-xl relative group transition-all duration-1000" style={{ height: `${safeHeight}%` }}>
+                 <div className="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-800 text-white text-xs py-1 px-2 rounded">
+                   {safeChecks}
+                 </div>
+               </div>
             </div>
           </div>
 
@@ -304,15 +321,23 @@ export default function DashboardOverview() {
         {/* COLUMN 3 */}
         <div className="flex flex-col gap-6">
           <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 flex flex-col items-center h-64">
-             {/* Semi Circle Gauge Mock */}
-             <div className="relative w-48 h-24 overflow-hidden mt-6">
-                <div className="w-48 h-48 rounded-full border-[12px] border-slate-100 absolute top-0 left-0"></div>
-                {/* Red segment (High Risk) */}
-                <div className="w-48 h-48 rounded-full border-[12px] border-transparent border-t-rose-500 border-l-rose-500 absolute top-0 left-0 transform -rotate-45"></div>
-                {/* Yellow segment (Medium Risk) */}
-                <div className="w-48 h-48 rounded-full border-[12px] border-transparent border-t-amber-400 absolute top-0 left-0 transform rotate-45"></div>
-                {/* Blue segment (Low Risk) */}
-                <div className="w-48 h-48 rounded-full border-[12px] border-transparent border-r-indigo-500 absolute top-0 left-0 transform rotate-45"></div>
+             {/* Dynamic SVG Gauge */}
+             <div className="relative w-48 h-24 overflow-hidden mt-6 flex justify-center">
+                <svg viewBox="0 0 100 50" className="w-full h-full">
+                  {/* Background Arc */}
+                  <path d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke="#f1f5f9" strokeWidth="12" strokeLinecap="round" />
+                  {/* Dynamic Value Arc */}
+                  <path 
+                    d="M 10 50 A 40 40 0 0 1 90 50" 
+                    fill="none" 
+                    stroke={avgThreat > 70 ? "#f43f5e" : avgThreat > 30 ? "#fbbf24" : "#6366f1"} 
+                    strokeWidth="12" 
+                    strokeLinecap="round" 
+                    strokeDasharray="125.6" 
+                    strokeDashoffset={125.6 - (125.6 * avgThreat / 100)} 
+                    className="transition-all duration-1000 ease-out" 
+                  />
+                </svg>
              </div>
              
              <div className="absolute mt-14 flex flex-col items-center">

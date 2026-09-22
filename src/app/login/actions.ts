@@ -1,11 +1,11 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
+import { cookies } from 'next/headers'
 import { createClient } from '@/utils/supabase/server'
 
 export async function login(formData: FormData) {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   const data = {
     email: formData.get('email') as string,
@@ -19,11 +19,11 @@ export async function login(formData: FormData) {
   }
 
   revalidatePath('/dashboard')
-  redirect('/dashboard')
+  return { success: true }
 }
 
 export async function signup(formData: FormData) {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   const data = {
     email: formData.get('email') as string,
@@ -37,11 +37,19 @@ export async function signup(formData: FormData) {
   }
 
   revalidatePath('/dashboard')
-  redirect('/dashboard')
+  return { success: true }
 }
 
 export async function logout() {
-  const supabase = createClient()
+  const supabase = await createClient()
   await supabase.auth.signOut()
-  redirect('/login')
+  const cookieStore = await cookies()
+  cookieStore.delete('demo_mode')
+  return { success: true }
+}
+
+export async function demoLogin() {
+  const cookieStore = await cookies()
+  cookieStore.set('demo_mode', 'true', { path: '/' })
+  return { success: true }
 }

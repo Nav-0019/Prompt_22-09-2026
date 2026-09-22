@@ -22,7 +22,10 @@ export async function proxy(request: NextRequest) {
 
     const { data: { user } } = await supabase.auth.getUser()
 
-    if (!user) {
+    // Check for demo mode cookie
+    const isDemo = request.cookies.get('demo_mode')?.value === 'true'
+
+    if (!user && !isDemo) {
       // User is not authenticated, redirect to login page
       return NextResponse.redirect(new URL('/login', request.url))
     }

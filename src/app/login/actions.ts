@@ -1,7 +1,6 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { cookies } from 'next/headers'
 import { createClient } from '@/utils/supabase/server'
 
 export async function login(formData: FormData) {
@@ -43,13 +42,5 @@ export async function signup(formData: FormData) {
 export async function logout() {
   const supabase = await createClient()
   await supabase.auth.signOut()
-  const cookieStore = await cookies()
-  cookieStore.delete('demo_mode')
-  return { success: true }
-}
-
-export async function demoLogin() {
-  const cookieStore = await cookies()
-  cookieStore.set('demo_mode', 'true', { path: '/' })
   return { success: true }
 }

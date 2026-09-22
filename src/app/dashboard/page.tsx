@@ -245,6 +245,59 @@ export default function DashboardOverview() {
         </div>
 
       </div>
+
+      {/* RECENT SCANS HISTORY TABLE */}
+      <div className="mt-8 bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="font-bold text-slate-800 text-lg">Recent Scan History</h3>
+          <button className="text-sm font-bold text-[#F1651A] hover:text-[#d95a16]">View all</button>
+        </div>
+        
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b border-slate-100">
+                <th className="py-3 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Date</th>
+                <th className="py-3 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Scam Type</th>
+                <th className="py-3 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Threat Level</th>
+                <th className="py-3 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {scans.length > 0 ? (
+                scans.map((scan) => (
+                  <tr key={scan.id} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
+                    <td className="py-4 px-4 text-sm font-medium text-slate-600">
+                      {new Date(scan.created_at).toLocaleDateString()} {new Date(scan.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                    </td>
+                    <td className="py-4 px-4 text-sm font-bold text-slate-800">
+                      {scan.scam_type}
+                    </td>
+                    <td className="py-4 px-4">
+                      <div className="flex items-center gap-2">
+                        <div className={`w-2 h-2 rounded-full ${scan.threat_index > 70 ? 'bg-rose-500' : scan.threat_index > 40 ? 'bg-amber-400' : 'bg-indigo-500'}`}></div>
+                        <span className="text-sm font-bold text-slate-700">{scan.threat_index}%</span>
+                      </div>
+                    </td>
+                    <td className="py-4 px-4">
+                      <button className="text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1.5 rounded-full transition-colors">
+                        View Report
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={4} className="py-8 text-center text-slate-500 text-sm font-medium">
+                    No scans performed yet. Click "New scan" to get started!
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
     </div>
   );
 }

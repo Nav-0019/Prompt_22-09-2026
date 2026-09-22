@@ -17,6 +17,8 @@ export default function DashboardOverview() {
   const [userName, setUserName] = useState('Security Admin');
   const [filter, setFilter] = useState('All');
   const [timeRange, setTimeRange] = useState('All time');
+  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
+  const [showTimeDropdown, setShowTimeDropdown] = useState(false);
   
   useEffect(() => {
     async function fetchData() {
@@ -80,15 +82,7 @@ export default function DashboardOverview() {
   
   const topScamVector = Object.entries(scamCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || 'Unknown';
 
-  const toggleFilter = () => {
-    const states = ['All', 'High Risk', 'Medium Risk', 'Low Risk'];
-    setFilter(states[(states.indexOf(filter) + 1) % states.length]);
-  };
-
-  const toggleTimeRange = () => {
-    const states = ['All time', 'Last month', 'Last week', 'Today'];
-    setTimeRange(states[(states.indexOf(timeRange) + 1) % states.length]);
-  };
+  // Note: the toggles are replaced by direct setFilter / setTimeRange in the dropdown UI
 
   const handleExport = () => {
     const csvContent = [
@@ -129,15 +123,57 @@ export default function DashboardOverview() {
       </div>
 
       {/* FILTER ROW */}
-      <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+      <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4 relative">
         <div className="flex items-center gap-2 bg-white rounded-full shadow-sm p-1 border border-slate-100">
-          <button onClick={toggleFilter} className="flex items-center gap-2 px-4 py-2 hover:bg-slate-50 rounded-full text-sm font-bold text-slate-700 transition-colors">
-            <Filter className="w-4 h-4" /> {filter === 'All' ? 'Filter' : filter}
-          </button>
+          
+          {/* FILTER DROPDOWN */}
+          <div className="relative">
+            <button 
+              onClick={() => { setShowFilterDropdown(!showFilterDropdown); setShowTimeDropdown(false); }} 
+              className="flex items-center gap-2 px-4 py-2 hover:bg-slate-50 rounded-full text-sm font-bold text-slate-700 transition-colors"
+            >
+              <Filter className="w-4 h-4" /> {filter === 'All' ? 'Filter' : filter}
+            </button>
+            {showFilterDropdown && (
+              <div className="absolute top-full left-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-slate-100 overflow-hidden z-50">
+                {['All', 'High Risk', 'Medium Risk', 'Low Risk'].map(f => (
+                  <button 
+                    key={f} 
+                    onClick={() => { setFilter(f); setShowFilterDropdown(false); }}
+                    className={`w-full text-left px-4 py-2 text-sm font-medium hover:bg-slate-50 transition-colors ${filter === f ? 'text-[#F1651A] bg-orange-50/50' : 'text-slate-700'}`}
+                  >
+                    {f}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          
           <div className="w-px h-6 bg-slate-200"></div>
-          <button onClick={toggleTimeRange} className="flex items-center gap-2 px-4 py-2 hover:bg-slate-50 rounded-full text-sm font-bold text-slate-700 transition-colors">
-             {timeRange}
-          </button>
+          
+          {/* TIME RANGE DROPDOWN */}
+          <div className="relative">
+            <button 
+              onClick={() => { setShowTimeDropdown(!showTimeDropdown); setShowFilterDropdown(false); }} 
+              className="flex items-center gap-2 px-4 py-2 hover:bg-slate-50 rounded-full text-sm font-bold text-slate-700 transition-colors"
+            >
+               {timeRange}
+            </button>
+            {showTimeDropdown && (
+              <div className="absolute top-full left-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-slate-100 overflow-hidden z-50">
+                {['All time', 'Today', 'Last week', 'Last month'].map(t => (
+                  <button 
+                    key={t} 
+                    onClick={() => { setTimeRange(t); setShowTimeDropdown(false); }}
+                    className={`w-full text-left px-4 py-2 text-sm font-medium hover:bg-slate-50 transition-colors ${timeRange === t ? 'text-[#F1651A] bg-orange-50/50' : 'text-slate-700'}`}
+                  >
+                    {t}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
           <div className="w-px h-6 bg-slate-200"></div>
           <button onClick={handleExport} className="flex items-center gap-2 px-4 py-2 hover:bg-slate-50 rounded-full text-sm font-bold text-slate-700 transition-colors">
             <Download className="w-4 h-4" /> Export

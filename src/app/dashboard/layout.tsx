@@ -15,6 +15,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [showProfile, setShowProfile] = useState(false);
   const [isNightMode, setIsNightMode] = useState(false);
   const [user, setUser] = useState<{ email?: string; name?: string; picture?: string } | null>(null);
+  const [notifications, setNotifications] = useState<any[]>([]);
 
   React.useEffect(() => {
     const supabase = createClient();
@@ -27,6 +28,25 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         });
       }
     });
+
+    // Fetch Recent Alerts for Notifications
+    supabase
+      .from('scans')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(5)
+      .then(({ data }) => {
+        if (data) setNotifications(data);
+      });
+      
+    // Load Night Mode Theme
+    if (typeof window !== 'undefined') {
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme === 'dark') {
+        setIsNightMode(true);
+        document.documentElement.classList.add('night-mode');
+      }
+    }
   }, []);
 
   const toggleNightMode = () => {
@@ -34,8 +54,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     setIsNightMode(nextState);
     if (nextState) {
       document.documentElement.classList.add('night-mode');
+      if (typeof window !== 'undefined') localStorage.setItem('theme', 'dark');
     } else {
       document.documentElement.classList.remove('night-mode');
+      if (typeof window !== 'undefined') localStorage.setItem('theme', 'light');
     }
   };
 
@@ -137,15 +159,30 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     <button className="text-xs font-medium text-[#F1651A] hover:text-[#d95a16]">Mark all as read</button>
                   </div>
                   <div className="p-2 max-h-[300px] overflow-y-auto">
-                    <div className="p-3 hover:bg-slate-50 rounded-xl transition-colors cursor-pointer flex gap-3">
-                      <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center shrink-0">
-                        <img src="/logo.png" alt="Logo" className="w-5 h-5 rounded-md object-cover" />
+                    {notifications.length > 0 ? (
+                      notifications.map(alert => (
+                        <div key={alert.id} className="p-3 hover:bg-slate-50 rounded-xl transition-colors cursor-pointer flex gap-3 relative">
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${alert.threat_index >= 70 ? 'bg-rose-100 text-rose-500' : 'bg-emerald-100 text-emerald-500'}`}>
+                            <Shield className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-slate-800 line-clamp-1">
+                              {alert.threat_index >= 70 ? `High Risk Detected: ${alert.scam_type}` : `Safe File Scanned`}
+                            </p>
+                            <p className="text-xs text-slate-500 mt-0.5">
+                              {new Date(alert.created_at).toLocaleDateString()}
+                            </p>
+                          </div>
+                          {alert.threat_index >= 70 && (
+                            <span className="absolute top-3 right-3 w-2 h-2 bg-[#F1651A] rounded-full"></span>
+                          )}
+                        </div>
+                      ))
+                    ) : (
+                      <div className="p-4 text-center text-sm text-slate-500">
+                        No recent notifications.
                       </div>
-                      <div>
-                        <p className="text-sm font-medium text-slate-800">New phishing attempt blocked</p>
-                        <p className="text-xs text-slate-500 mt-0.5">12 minutes ago</p>
-                      </div>
-                    </div>
+                    )}
                   </div>
                 </div>
               )}

@@ -5,7 +5,7 @@ import { Search, Settings, Bell, Home, Shield, BookOpen, Moon, Sun, LogOut, User
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { logout } from '@/app/login/actions';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/utils/supabase/client';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -17,11 +17,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [user, setUser] = useState<{ email?: string; name?: string; picture?: string } | null>(null);
 
   React.useEffect(() => {
+    const supabase = createClient();
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (user) {
         setUser({
           email: user.email,
-          name: user.user_metadata?.full_name || 'Security Admin',
+          name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Security Admin',
           picture: user.user_metadata?.avatar_url || ''
         });
       }

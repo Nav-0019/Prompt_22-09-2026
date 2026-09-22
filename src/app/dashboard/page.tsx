@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/utils/supabase/client';
 import { Search, Filter, Calendar, Download, Plus, CheckCircle, ShieldAlert } from 'lucide-react';
 import Link from 'next/link';
 
@@ -18,11 +18,14 @@ export default function DashboardOverview() {
   
   useEffect(() => {
     async function fetchData() {
+      const supabase = createClient();
+      
       // Get User Name
       const { data: { user } } = await supabase.auth.getUser();
-      if (user && user.user_metadata?.full_name) {
+      if (user) {
+        const fullName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'Security Admin';
         // Extract first name
-        const firstName = user.user_metadata.full_name.split(' ')[0];
+        const firstName = fullName.split(' ')[0];
         setUserName(firstName);
       }
 

@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { analyzeOffer } from '@/lib/gemini';
 import { supabase } from '@/lib/supabase';
 
+export const maxDuration = 60; // Allow up to 60 seconds for Gemini processing on Vercel Hobby tier
+
 export async function POST(req: Request) {
   try {
     const contentType = req.headers.get('content-type') || '';

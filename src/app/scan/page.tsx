@@ -32,6 +32,7 @@ export default function ScannerDashboard() {
   const [scanStep, setScanStep] = useState(0);
   const [result, setResult] = useState<ScanResult | null>(null);
   const [showReport, setShowReport] = useState(false);
+  const [scanMode, setScanMode] = useState<'text' | 'url' | 'document'>('text');
   
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -121,45 +122,55 @@ export default function ScannerDashboard() {
           <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-slate-800 mb-6 transition-colors">
             <ArrowLeft className="w-4 h-4" /> Back to Dashboard
           </Link>
-          <h2 className="text-2xl font-bold text-slate-800 mb-6">Inspect an Offer</h2>
+          <h2 className="text-2xl font-bold text-slate-800 mb-2">Inspect an Offer</h2>
+          <p className="text-slate-500 text-sm mb-6">Select the type of content you want to analyze for threats.</p>
+
+          <div className="flex border-b border-slate-200 mb-6">
+            <button 
+              onClick={() => { setScanMode('text'); setSelectedFile(null); setInputContent(''); }} 
+              className={`flex-1 py-3 text-sm font-bold border-b-2 transition-colors ${scanMode === 'text' ? 'border-[#F1651A] text-[#F1651A]' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+            >
+              Text Snippet
+            </button>
+            <button 
+              onClick={() => { setScanMode('url'); setSelectedFile(null); setInputContent(''); }} 
+              className={`flex-1 py-3 text-sm font-bold border-b-2 transition-colors ${scanMode === 'url' ? 'border-[#F1651A] text-[#F1651A]' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+            >
+              Link / URL
+            </button>
+            <button 
+              onClick={() => { setScanMode('document'); setInputContent(''); }} 
+              className={`flex-1 py-3 text-sm font-bold border-b-2 transition-colors ${scanMode === 'document' ? 'border-[#F1651A] text-[#F1651A]' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+            >
+              PDF / Image
+            </button>
+          </div>
           
-          {selectedFile ? (
-            <div className="mb-6 p-6 border-2 border-dashed border-orange-200 bg-orange-50 rounded-xl flex flex-col items-center justify-center relative">
-              <button 
-                onClick={() => setSelectedFile(null)}
-                className="absolute top-2 right-2 p-1 bg-white rounded-full shadow-sm text-slate-400 hover:text-slate-700"
-                aria-label="Remove file"
-              >
-                <X className="w-4 h-4" />
-              </button>
-              <FileIcon className="w-10 h-10 text-orange-500 mb-2" />
-              <p className="font-semibold text-slate-700">{selectedFile.name}</p>
-              <p className="text-xs text-slate-500 mt-1">Ready for analysis</p>
-            </div>
-          ) : (
+          {scanMode === 'document' ? (
             <div className="mb-6">
-              <label htmlFor="content" className="block text-sm font-semibold text-slate-700 mb-2">
-                Paste job offer text or URL
-              </label>
-              <textarea
-                id="content"
-                rows={5}
-                className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F1651A] focus:border-transparent transition-all resize-none text-slate-700"
-                placeholder="Paste your content here..."
-                value={inputContent}
-                onChange={(e) => setInputContent(e.target.value)}
-                maxLength={5000}
-              />
-              
-              <div className="flex items-center justify-between mt-4">
-                <div className="flex items-center gap-4">
-                  <div className="text-sm font-bold text-slate-400">OR</div>
+              {selectedFile ? (
+                <div className="p-6 border-2 border-dashed border-orange-200 bg-orange-50 rounded-xl flex flex-col items-center justify-center relative">
                   <button 
-                    onClick={() => fileInputRef.current?.click()}
-                    className="flex items-center gap-2 text-sm font-semibold text-[#F1651A] bg-orange-50 px-4 py-2 rounded-lg hover:bg-orange-100 transition-colors"
+                    onClick={() => setSelectedFile(null)}
+                    className="absolute top-2 right-2 p-1 bg-white rounded-full shadow-sm text-slate-400 hover:text-slate-700"
+                    aria-label="Remove file"
                   >
-                    <Upload className="w-4 h-4" /> Upload PDF / Image
+                    <X className="w-4 h-4" />
                   </button>
+                  <FileIcon className="w-10 h-10 text-orange-500 mb-2" />
+                  <p className="font-semibold text-slate-700">{selectedFile.name}</p>
+                  <p className="text-xs text-slate-500 mt-1">Ready for analysis</p>
+                </div>
+              ) : (
+                <div 
+                  onClick={() => fileInputRef.current?.click()}
+                  className="p-10 border-2 border-dashed border-slate-300 hover:border-[#F1651A] bg-slate-50 rounded-xl flex flex-col items-center justify-center cursor-pointer transition-colors group"
+                >
+                  <div className="w-12 h-12 bg-white rounded-full shadow-sm flex items-center justify-center mb-3 group-hover:bg-orange-50">
+                    <Upload className="w-6 h-6 text-slate-400 group-hover:text-[#F1651A] transition-colors" />
+                  </div>
+                  <p className="font-bold text-slate-700 mb-1">Click to upload document</p>
+                  <p className="text-sm text-slate-500">Supports PDF, PNG, JPG (Max 5MB)</p>
                   <input 
                     type="file" 
                     ref={fileInputRef} 
@@ -168,7 +179,39 @@ export default function ScannerDashboard() {
                     accept="image/*,application/pdf"
                   />
                 </div>
-                <span className="text-xs text-slate-400 font-medium">{inputContent.length} / 5000</span>
+              )}
+            </div>
+          ) : scanMode === 'url' ? (
+            <div className="mb-6">
+              <label htmlFor="content" className="block text-sm font-semibold text-slate-700 mb-2">
+                Suspicious Link or URL
+              </label>
+              <input
+                id="content"
+                type="url"
+                className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F1651A] focus:border-transparent transition-all text-slate-700"
+                placeholder="https://example.com/login"
+                value={inputContent}
+                onChange={(e) => setInputContent(e.target.value)}
+              />
+              <p className="text-xs text-slate-500 mt-2">We will parse the URL for domain age, anomalies, and known threat lists.</p>
+            </div>
+          ) : (
+            <div className="mb-6">
+              <label htmlFor="content" className="block text-sm font-semibold text-slate-700 mb-2">
+                Job Offer or Email Text
+              </label>
+              <textarea
+                id="content"
+                rows={6}
+                className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F1651A] focus:border-transparent transition-all resize-none text-slate-700"
+                placeholder="Paste the raw text of the email, message, or offer here..."
+                value={inputContent}
+                onChange={(e) => setInputContent(e.target.value)}
+                maxLength={5000}
+              />
+              <div className="flex justify-end mt-2">
+                <span className="text-xs text-slate-400 font-medium">{inputContent.length} / 5000 characters</span>
               </div>
             </div>
           )}

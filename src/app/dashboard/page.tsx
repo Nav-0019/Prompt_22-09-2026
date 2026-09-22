@@ -19,6 +19,7 @@ export default function DashboardOverview() {
   const [timeRange, setTimeRange] = useState('All time');
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [showTimeDropdown, setShowTimeDropdown] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   
   useEffect(() => {
     const supabase = createClient();
@@ -57,10 +58,17 @@ export default function DashboardOverview() {
   }, []);
 
   const filteredScans = scans.filter(scan => {
+    // 1. Search Query
+    if (searchQuery && !scan.scam_type.toLowerCase().includes(searchQuery.toLowerCase())) {
+      return false;
+    }
+
+    // 2. Filter Dropdown
     if (filter === 'High Risk' && scan.threat_index <= 70) return false;
     if (filter === 'Medium Risk' && (scan.threat_index > 70 || scan.threat_index <= 30)) return false;
     if (filter === 'Low Risk' && scan.threat_index > 30) return false;
 
+    // 3. Time Range
     const date = new Date(scan.created_at);
     const now = new Date();
     if (timeRange === 'Last month') {
@@ -79,14 +87,15 @@ export default function DashboardOverview() {
     return true;
   });
 
-  const totalScans = filteredScans.length;
-  const avgThreat = filteredScans.length > 0 ? Math.round(filteredScans.reduce((acc, scan) => acc + scan.threat_index, 0) / filteredScans.length) : 0;
-  const threatsPrevented = filteredScans.filter(s => s.threat_index >= 70).length;
-  const safeChecks = filteredScans.filter(s => s.threat_index < 30).length;
+  // Analytics Cards (Unfiltered Global Metrics)
+  const totalScans = scans.length;
+  const avgThreat = scans.length > 0 ? Math.round(scans.reduce((acc, scan) => acc + scan.threat_index, 0) / scans.length) : 0;
+  const threatsPrevented = scans.filter(s => s.threat_index >= 70).length;
+  const safeChecks = scans.filter(s => s.threat_index < 30).length;
   
-  // Calculate Top Scam Vector
-  const scamCounts = filteredScans.reduce((acc, curr) => {
-    if (curr.scam_type && curr.scam_type !== 'None') {
+  // Calculate Top Scam Vector based on all data
+  const scamCounts = scans.reduce((acc, curr) => {
+    if (curr.scam_type && curr.scam_type !== 'None' && curr.scam_type !== 'Legitimate Offer') {
       acc[curr.scam_type] = (acc[curr.scam_type] || 0) + 1;
     }
     return acc;
@@ -200,8 +209,10 @@ export default function DashboardOverview() {
           <Search className="w-4 h-4 text-slate-400 mr-2" />
           <input 
             type="text" 
-            placeholder="Search" 
-            className="bg-transparent border-none focus:outline-none text-sm w-full font-medium"
+            placeholder="Search by scam type..." 
+            className="bg-transparent border-none focus:outline-none text-sm w-full font-medium text-slate-800"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
       </div>

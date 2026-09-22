@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Shield, AlertTriangle, CheckCircle, ArrowRight, Loader2, Upload, File as FileIcon, X } from 'lucide-react';
+import { Shield, AlertTriangle, CheckCircle, ArrowRight, ArrowLeft, Loader2, Upload, File as FileIcon, X } from 'lucide-react';
+import Link from 'next/link';
 
 type AppState = 'IDLE' | 'SCANNING' | 'RESULT' | 'ERROR';
 
@@ -108,6 +109,9 @@ export default function ScannerDashboard() {
     if (appState === 'IDLE' || appState === 'ERROR') {
       return (
         <div className="w-full max-w-2xl mx-auto mt-12 bg-white rounded-2xl shadow-xl border border-slate-100 p-8 z-20 relative">
+          <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-slate-800 mb-6 transition-colors">
+            <ArrowLeft className="w-4 h-4" /> Back to Dashboard
+          </Link>
           <h2 className="text-2xl font-bold text-slate-800 mb-6">Inspect an Offer</h2>
           
           {selectedFile ? (

@@ -24,3 +24,20 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+.night-mode {
+  filter: invert(1) hue-rotate(180deg);
+  background-color: #111827 !important;
+}
+
+.night-mode img, 
+.night-mode video, 
+.night-mode svg, 
+.night-mode .bg-rose-500,
+.night-mode .text-rose-500,
+.night-mode .bg-emerald-400,
+.night-mode .text-emerald-500,
+.night-mode .bg-amber-500,
+.night-mode .bg-indigo-500 {
+  filter: invert(1) hue-rotate(180deg);
+}

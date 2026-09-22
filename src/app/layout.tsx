@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   description: "Advanced AI threat detection for modern organizations.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
       lang="en"

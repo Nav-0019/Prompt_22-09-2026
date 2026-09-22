@@ -15,6 +15,8 @@ interface RecentScan {
 export default function DashboardOverview() {
   const [scans, setScans] = useState<RecentScan[]>([]);
   const [userName, setUserName] = useState('Security Admin');
+  const [filter, setFilter] = useState('All');
+  const [timeRange, setTimeRange] = useState('All time');
   
   useEffect(() => {
     async function fetchData() {
@@ -40,13 +42,36 @@ export default function DashboardOverview() {
     fetchData();
   }, []);
 
-  const totalScans = scans.length;
-  const avgThreat = scans.length > 0 ? Math.round(scans.reduce((acc, scan) => acc + scan.threat_index, 0) / scans.length) : 0;
-  const threatsPrevented = scans.filter(s => s.threat_index >= 70).length;
-  const safeChecks = scans.filter(s => s.threat_index < 30).length;
+  const filteredScans = scans.filter(scan => {
+    if (filter === 'High Risk' && scan.threat_index <= 70) return false;
+    if (filter === 'Medium Risk' && (scan.threat_index > 70 || scan.threat_index <= 30)) return false;
+    if (filter === 'Low Risk' && scan.threat_index > 30) return false;
+
+    const date = new Date(scan.created_at);
+    const now = new Date();
+    if (timeRange === 'Last month') {
+      const oneMonthAgo = new Date();
+      oneMonthAgo.setMonth(now.getMonth() - 1);
+      if (date < oneMonthAgo) return false;
+    }
+    if (timeRange === 'Last week') {
+      const oneWeekAgo = new Date();
+      oneWeekAgo.setDate(now.getDate() - 7);
+      if (date < oneWeekAgo) return false;
+    }
+    if (timeRange === 'Today') {
+      if (date.getDate() !== now.getDate() || date.getMonth() !== now.getMonth() || date.getFullYear() !== now.getFullYear()) return false;
+    }
+    return true;
+  });
+
+  const totalScans = filteredScans.length;
+  const avgThreat = filteredScans.length > 0 ? Math.round(filteredScans.reduce((acc, scan) => acc + scan.threat_index, 0) / filteredScans.length) : 0;
+  const threatsPrevented = filteredScans.filter(s => s.threat_index >= 70).length;
+  const safeChecks = filteredScans.filter(s => s.threat_index < 30).length;
   
   // Calculate Top Scam Vector
-  const scamCounts = scans.reduce((acc, curr) => {
+  const scamCounts = filteredScans.reduce((acc, curr) => {
     if (curr.scam_type && curr.scam_type !== 'None') {
       acc[curr.scam_type] = (acc[curr.scam_type] || 0) + 1;
     }
@@ -54,6 +79,37 @@ export default function DashboardOverview() {
   }, {} as Record<string, number>);
   
   const topScamVector = Object.entries(scamCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || 'Unknown';
+
+  const toggleFilter = () => {
+    const states = ['All', 'High Risk', 'Medium Risk', 'Low Risk'];
+    setFilter(states[(states.indexOf(filter) + 1) % states.length]);
+  };
+
+  const toggleTimeRange = () => {
+    const states = ['All time', 'Last month', 'Last week', 'Today'];
+    setTimeRange(states[(states.indexOf(timeRange) + 1) % states.length]);
+  };
+
+  const handleExport = () => {
+    const csvContent = [
+      ['Date', 'Scam Type', 'Threat Level', 'ID'],
+      ...filteredScans.map(s => [
+        new Date(s.created_at).toLocaleDateString(),
+        `"${s.scam_type}"`,
+        `${s.threat_index}%`,
+        s.id
+      ])
+    ].map(e => e.join(",")).join("\n");
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", "phishing_scans.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   return (
     <div className="w-full animation-fade-in">
@@ -75,15 +131,15 @@ export default function DashboardOverview() {
       {/* FILTER ROW */}
       <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
         <div className="flex items-center gap-2 bg-white rounded-full shadow-sm p-1 border border-slate-100">
-          <button className="flex items-center gap-2 px-4 py-2 hover:bg-slate-50 rounded-full text-sm font-bold text-slate-700">
-            <Filter className="w-4 h-4" /> Filter
+          <button onClick={toggleFilter} className="flex items-center gap-2 px-4 py-2 hover:bg-slate-50 rounded-full text-sm font-bold text-slate-700 transition-colors">
+            <Filter className="w-4 h-4" /> {filter === 'All' ? 'Filter' : filter}
           </button>
           <div className="w-px h-6 bg-slate-200"></div>
-          <button className="flex items-center gap-2 px-4 py-2 hover:bg-slate-50 rounded-full text-sm font-bold text-slate-700">
-             Last month
+          <button onClick={toggleTimeRange} className="flex items-center gap-2 px-4 py-2 hover:bg-slate-50 rounded-full text-sm font-bold text-slate-700 transition-colors">
+             {timeRange}
           </button>
           <div className="w-px h-6 bg-slate-200"></div>
-          <button className="flex items-center gap-2 px-4 py-2 hover:bg-slate-50 rounded-full text-sm font-bold text-slate-700">
+          <button onClick={handleExport} className="flex items-center gap-2 px-4 py-2 hover:bg-slate-50 rounded-full text-sm font-bold text-slate-700 transition-colors">
             <Download className="w-4 h-4" /> Export
           </button>
         </div>
@@ -288,8 +344,8 @@ export default function DashboardOverview() {
               </tr>
             </thead>
             <tbody>
-              {scans.length > 0 ? (
-                scans.map((scan) => (
+              {filteredScans.length > 0 ? (
+                filteredScans.map((scan) => (
                   <tr key={scan.id} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
                     <td className="py-4 px-4 text-sm font-medium text-slate-600">
                       {new Date(scan.created_at).toLocaleDateString()} {new Date(scan.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}

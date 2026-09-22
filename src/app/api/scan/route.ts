@@ -40,7 +40,7 @@ export async function POST(req: Request) {
     const latency = Date.now() - startTime;
 
     // 2. Log to Supabase (Fire and forget, don't await/block the response)
-    if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY) {
+    if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
       supabase
         .from('scans')
         .insert([{

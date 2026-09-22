@@ -9,7 +9,7 @@ export async function POST(req: Request) {
     const contentType = req.headers.get('content-type') || '';
     
     let content = '';
-    let inputType: 'text' | 'url' | 'image' | 'pdf' = 'text';
+    let inputType: 'text' | 'url' | 'document' = 'text';
     let fileBase64: string | undefined = undefined;
     let mimeType: string | undefined = undefined;
 
@@ -21,7 +21,7 @@ export async function POST(req: Request) {
       content = textContent || '';
       
       if (file) {
-        inputType = file.type === 'application/pdf' ? 'pdf' : 'image';
+        inputType = 'document';
         mimeType = file.type;
         const arrayBuffer = await file.arrayBuffer();
         fileBase64 = Buffer.from(arrayBuffer).toString('base64');

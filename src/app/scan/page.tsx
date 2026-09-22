@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Shield, AlertTriangle, CheckCircle, ArrowRight, ArrowLeft, Loader2, Upload, File as FileIcon, X, FileText, MessageCircle, ExternalLink, Ban } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 type AppState = 'IDLE' | 'SCANNING' | 'RESULT' | 'ERROR';
 
@@ -58,7 +59,7 @@ export default function ScannerDashboard() {
     return () => clearInterval(interval);
   }, [appState, scanSteps.length]);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       // Only allow images and PDFs for now
@@ -69,9 +70,9 @@ export default function ScannerDashboard() {
         alert("Please upload a PDF or an Image.");
       }
     }
-  };
+  }, []);
 
-  const handleScan = async () => {
+  const handleScan = useCallback(async () => {
     if (!inputContent.trim() && !selectedFile) return;
 
     setAppState('SCANNING');
@@ -113,7 +114,7 @@ export default function ScannerDashboard() {
       console.error(error);
       setAppState('ERROR');
     }
-  };
+  }, [inputContent, selectedFile]);
 
   const renderContent = () => {
     if (appState === 'IDLE' || appState === 'ERROR') {
@@ -177,6 +178,7 @@ export default function ScannerDashboard() {
                     onChange={handleFileChange} 
                     className="hidden" 
                     accept="image/*,application/pdf"
+                    aria-label="Upload document file"
                   />
                 </div>
               )}
@@ -193,6 +195,7 @@ export default function ScannerDashboard() {
                 placeholder="https://example.com/login"
                 value={inputContent}
                 onChange={(e) => setInputContent(e.target.value)}
+                aria-label="Suspicious Link or URL"
               />
               <p className="text-xs text-slate-500 mt-2">We will parse the URL for domain age, anomalies, and known threat lists.</p>
             </div>
@@ -209,6 +212,7 @@ export default function ScannerDashboard() {
                 value={inputContent}
                 onChange={(e) => setInputContent(e.target.value)}
                 maxLength={5000}
+                aria-label="Job Offer or Email Text"
               />
               <div className="flex justify-end mt-2">
                 <span className="text-xs text-slate-400 font-medium">{inputContent.length} / 5000 characters</span>
@@ -225,6 +229,7 @@ export default function ScannerDashboard() {
           <button 
             onClick={handleScan}
             disabled={!inputContent.trim() && !selectedFile}
+            aria-label="Scan Offer Now"
             className="w-full mt-2 bg-[#F1651A] hover:bg-[#d95a16] disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-medium text-lg px-8 py-4 rounded-xl shadow-[0_8px_30px_rgb(241,101,26,0.3)] transition-all flex justify-center items-center gap-2"
           >
             Scan Offer Now <ArrowRight className="w-5 h-5" />
@@ -375,7 +380,7 @@ export default function ScannerDashboard() {
                  <div className="space-y-3">
                    {result.remediation_steps.map((step, idx) => (
                      <label key={idx} className="flex items-start gap-3 p-3 rounded-lg hover:bg-slate-50 transition-colors cursor-pointer border border-transparent hover:border-slate-100">
-                       <input type="checkbox" className="mt-1 w-4 h-4 text-emerald-500 rounded border-slate-300 focus:ring-emerald-500" />
+                       <input type="checkbox" aria-label={`Remediation step ${idx + 1}`} className="mt-1 w-4 h-4 text-emerald-500 rounded border-slate-300 focus:ring-emerald-500" />
                        <span className="text-sm text-slate-700 font-medium">{step}</span>
                      </label>
                    ))}
@@ -388,16 +393,17 @@ export default function ScannerDashboard() {
                 <h3 className="text-lg font-bold text-white mb-2">Report Action Center</h3>
                 
                 <div className="flex flex-wrap gap-3">
-                  <button className="flex-1 flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-sm font-semibold px-4 py-3 rounded-xl transition-colors">
+                  <button className="flex-1 flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-sm font-semibold px-4 py-3 rounded-xl transition-colors" aria-label="Block Sender">
                     <Ban className="w-4 h-4 text-rose-400" /> Block Sender
                   </button>
-                  <button className="flex-1 flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-sm font-semibold px-4 py-3 rounded-xl transition-colors">
+                  <button className="flex-1 flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-sm font-semibold px-4 py-3 rounded-xl transition-colors" aria-label="Report to SafeBrowsing">
                     <ExternalLink className="w-4 h-4 text-indigo-400" /> Report to SafeBrowsing
                   </button>
                   <a 
                     href={`https://wa.me/917310347742?text=${encodeURIComponent(`🚨 THREAT ALERT: ${result.risk_category} (${result.threat_index}%)\nType: ${result.scam_classification}\n\nSummary: ${result.executive_summary}`)}`} 
                     target="_blank" 
                     rel="noreferrer"
+                    aria-label="Share via WhatsApp"
                     className="flex-1 flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-sm font-semibold px-4 py-3 rounded-xl transition-colors shadow-lg shadow-emerald-900/20"
                   >
                     <MessageCircle className="w-4 h-4" /> Share via WhatsApp
@@ -407,6 +413,7 @@ export default function ScannerDashboard() {
                 <div className="mt-4 border-t border-slate-700 pt-6">
                   <button 
                     onClick={() => setShowReport(!showReport)}
+                    aria-label="Generate Official Cybercrime Complaint"
                     className="w-full flex items-center justify-center gap-2 bg-[#F1651A] hover:bg-[#d95a16] text-white font-bold px-6 py-4 rounded-xl shadow-lg transition-all"
                   >
                     <FileText className="w-5 h-5" /> {showReport ? "Hide Cybercrime Report" : "Generate Official Cybercrime Complaint"}
@@ -446,10 +453,10 @@ export default function ScannerDashboard() {
       <div className="absolute inset-0 z-0 bg-[radial-gradient(#CBD5E1_1.5px,transparent_1.5px)] [background-size:24px_24px] opacity-70 pointer-events-none"></div>
 
       <header className="relative z-20 w-full max-w-7xl mx-auto px-6 py-6 flex items-center justify-between">
-        <a href="/" className="flex items-center gap-2 font-bold text-xl tracking-tight hover:opacity-80">
-          <img src="/logo.png" alt="Logo" className="w-6 h-6 rounded-md object-cover" />
+        <Link href="/" className="flex items-center gap-2 font-bold text-xl tracking-tight hover:opacity-80">
+          <Image src="/logo.png" alt="Phishing Inspector Logo" width={24} height={24} className="w-6 h-6 rounded-md object-cover" priority />
           Phishing Inspector
-        </a>
+        </Link>
         <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-600">
           <a href="/scan" className="text-[#F1651A] font-bold">Scanner</a>
           <a href="/scams" className="hover:text-slate-900">Education Hub</a>

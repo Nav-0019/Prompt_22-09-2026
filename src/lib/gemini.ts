@@ -23,12 +23,17 @@ export interface ScanResult {
   official_report_draft?: string;
 }
 
-export async function analyzeOffer(
-  content: string, 
-  type: 'text' | 'url' | 'image' | 'pdf', 
-  fileBase64?: string, 
-  mimeType?: string
-): Promise<ScanResult> {
+/**
+ * Analyzes a given text snippet, URL, or document for phishing/scam red flags using Gemini AI.
+ * 
+ * @param {string} content - The text, URL, or extracted document text to analyze.
+ * @param {'text' | 'url' | 'document'} type - The category of the input to ensure accurate prompt framing.
+ * @param {string} [fileBase64] - Optional base64 encoded string of an image or PDF for multimodal analysis.
+ * @param {string} [mimeType] - Optional MIME type of the uploaded file.
+ * @returns {Promise<ScanResult>} A strongly-typed JSON object containing threat metrics and forensics.
+ * @throws {Error} If the API request fails or the model returns unparseable data.
+ */
+export async function analyzeOffer(content: string, type: 'text' | 'url' | 'document' = 'text', fileBase64?: string, mimeType?: string): Promise<ScanResult> {
   const prompt = `You are an elite, enterprise-grade Cyber Threat Intelligence and Fraud Detection engine. Your task is to perform a deep forensic audit on the provided job offer, rental agreement, or employment communication.
 
 Analyze the input text or visual document across these 4 distinct security vectors:

@@ -1,41 +1,25 @@
-# 🛡️ Phishing Inspector – PromptWars Hackathon 
+# Phishing Inspector 🕵️‍♂️ (PromptWars Hackathon)
 
-An enterprise-grade Cyber Threat Intelligence & Fraud Detection platform powered natively by **Google Gemini**. Designed to instantly audit, detect, and neutralize highly sophisticated social engineering attacks—including pay-for-equipment schemes, fake appointment letters, and advance-fee fraud.
+## 📌 Chosen Vertical
+**Consumer Scams & Phishing Protection.** 
+This project focuses on protecting everyday internet users from sophisticated phishing URLs, fraudulent job offers, advance-fee scams, and malicious documents through AI-powered forensic analysis.
 
-![Phishing Inspector Logo](/public/logo.png)
+## 🧠 Approach and Logic
+The Phishing Inspector acts as a digital forensic analyst. Rather than relying on simple static blocklists, it utilizes **Google Gemini 2.5 Flash** to perform deep semantic and structural analysis on inputs.
+- **URL Scanning:** Checks for domain anomalies, typo-squatting, and deceptive URI structures.
+- **Text/Email Snippets:** Analyzes tone, urgency markers, and financial coercion tactics.
+- **Document Analysis:** Processes uploaded PDFs and Images to extract text and identify fraudulent letterheads or fake invoices.
 
-## 🚀 The Problem Statement
-As digital scams evolve, traditional text-based filters are no longer enough. Threat actors utilize complex psychological coercion, fake PDF appointment letters, and spoofed corporate domains to steal financial data. Average internet users and job seekers need a **deep forensic engine** that can see through the deceptive logic of an offer, just like a cybersecurity analyst would. 
+## ⚙️ How the solution works
+1. **User Input:** The user selects a mode (Text, URL, or Document) and provides the suspicious content.
+2. **AI Processing:** The Next.js API route formats a highly specific prompt enforcing a strict JSON schema and sends it to the Gemini API.
+3. **Forensic Breakdown:** Gemini returns a calculated Threat Index (0-100%), risk categorization, and extracts specific Indicators of Compromise (IOCs).
+4. **UI Presentation:** The frontend dynamically renders the JSON response into actionable widgets, providing the user with immediate remediation steps and a generated official cybercrime complaint draft.
 
-## ⚡ The Solution
-Phishing Inspector is a multi-layered forensic pipeline that leverages Google's Gemini multimodal capabilities to dismantle scams instantly. We provide users with real-time threat scores, actionable remediation strategies, and automated cybercrime reporting.
+## 🛑 Assumptions Made
+- **Vercel Hobby Limits:** It is assumed the application is deployed on a free-tier serverless platform, hence the selection of the lightning-fast `gemini-2.5-flash` model to bypass 10-second API timeouts.
+- **Supabase Realtime:** It is assumed a public Supabase instance is configured with the provided SQL schema to store and aggregate scan metrics.
+- **Browser Compatibility:** It is assumed the user is running a modern browser that supports `localStorage` for theming and React concurrent features.
 
-### 🔥 Key Features
-* **Multimodal Threat Detection:** Upload job offer text, suspicious URLs, or full PDF/Image documents. Powered by **Google Gemini 3.5 Flash**, the system instantly extracts and correlates forensic data.
-* **Deep IOC Extraction:** Automatically extracts and isolates Indicators of Compromise (IOCs) such as deceptive domains, malicious URLs, and high-urgency coercive phrasing.
-* **Real-Time Telemetry Dashboard:** A live, dynamic security dashboard powered by **Supabase Realtime WebSockets**. Watch your platform's threat metrics update instantly the moment a new scan is completed globally.
-* **Actionable Remediation Checklist:** Generates dynamic, step-by-step safety actions (e.g., "Freeze credit cards", "Reset passwords") based on the exact scam classification.
-* **Automated Cybercrime Reporting:** One-click generation of a formal, AI-drafted Cybercrime Incident Report ready for submission to national authorities.
-* **Emergency WhatsApp Integration:** Share critical threat alerts instantly with emergency contacts via WhatsApp click-to-chat API.
-* **Beautiful UI/UX:** Built with Next.js App Router, Tailwind CSS (v4), and features smooth animations, global night mode, and responsive data visualization charts.
-
-## 🛠️ Tech Stack
-* **Frontend:** Next.js 14 (App Router), React, Tailwind CSS, Lucide Icons, Framer Motion (via React-Type-Animation).
-* **AI Engine:** Google GenAI SDK (`@google/genai`) using `gemini-3.5-flash`.
-* **Database & Auth:** Supabase (PostgreSQL, Realtime Subscriptions).
-* **Deployment:** Vercel
-
-## ⚙️ Local Setup
-1. Clone the repository: `git clone https://github.com/Nav-0019/Prompt_22-09-2026.git`
-2. Install dependencies: `npm install`
-3. Rename `.env.example` to `.env.local` and add your keys:
-   ```env
-   GEMINI_API_KEY=your_gemini_api_key
-   NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-   ```
-4. Run the development server: `npm run dev`
-5. Open [http://localhost:3000](http://localhost:3000)
-
-## 🏆 Built for PromptWars Hackathon
-Focused on Code Quality, Security, Problem Statement Alignment, and excellent usage of Google Services.
+---
+*Built with Next.js, TailwindCSS, Supabase, and Google GenAI.*

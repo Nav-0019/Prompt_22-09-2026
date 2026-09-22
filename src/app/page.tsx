@@ -1,4 +1,7 @@
+"use client";
+
 import React from 'react';
+import { TypeAnimation } from 'react-type-animation';
 import { Shield, AlertTriangle, CheckCircle, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { LiveTicker } from '@/components/LiveTicker';
@@ -34,7 +37,18 @@ export default function PhishingInspectorLanding() {
 
         <h1 className="text-6xl sm:text-7xl font-bold tracking-tight text-center max-w-4xl leading-[1.1] text-slate-900">
           Don't Pay for That <br/>
-          <span className="text-[#F1651A] font-bold">'Free' Laptop</span>
+          <TypeAnimation
+            sequence={[
+              "'Free' Laptop", 2000,
+              "Background Check Fee", 2000,
+              "Advance Deposit", 2000,
+              "Fake Equipment", 2000
+            ]}
+            wrapper="span"
+            cursor={true}
+            repeat={Infinity}
+            className="text-[#F1651A] font-bold"
+          />
         </h1>
         <p className="mt-6 text-lg text-slate-600 text-center max-w-xl font-medium">
           Catch the <span className="text-[#F1651A] font-bold">'Free' Laptop</span>, advance-fee deposit traps and pay-for-equipment phishing scams that slip right past Gmail and Outlook.

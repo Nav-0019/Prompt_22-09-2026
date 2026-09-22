@@ -14,6 +14,13 @@ export interface ScanResult {
   };
   red_flags: string[];
   executive_summary: string;
+  ioc_breakdown?: {
+    suspicious_urls: string[];
+    suspicious_emails: string[];
+    suspicious_phrases: string[];
+  };
+  remediation_steps?: string[];
+  official_report_draft?: string;
 }
 
 export async function analyzeOffer(
@@ -44,10 +51,19 @@ You must respond ONLY with a valid, minified JSON object matching this exact str
   },
   "red_flags": [
     "<Detailed forensic finding 1>",
-    "<Detailed forensic finding 2>",
-    "<Detailed forensic finding 3>"
+    "<Detailed forensic finding 2>"
   ],
-  "executive_summary": "<A comprehensive 2-sentence breakdown explaining the primary threat vectors identified.>"
+  "executive_summary": "<A comprehensive 2-sentence breakdown explaining the primary threat vectors identified.>",
+  "ioc_breakdown": {
+    "suspicious_urls": ["<url1>", "<url2>"],
+    "suspicious_emails": ["<email1>"],
+    "suspicious_phrases": ["<exact phrasing extracted from text>"]
+  },
+  "remediation_steps": [
+    "<Actionable step 1, e.g. Immediate password reset>",
+    "<Actionable step 2, e.g. Freeze credit cards>"
+  ],
+  "official_report_draft": "<A professionally worded 3-paragraph incident report summarizing the scam attempt, the extracted IOCs, and the intent, written in a formal tone ready to be submitted to a national cybercrime authority.>"
 }
 
 Input Text (if provided):
@@ -88,11 +104,14 @@ ${content}
       });
     }
 
-    const text = response.text || "{}";
+    let text = response.text || "{}";
+    // Strip markdown codeblocks that Gemini sometimes adds
+    text = text.replace(/```json/g, '').replace(/```/g, '').trim();
+    
     const result = JSON.parse(text) as ScanResult;
     return result;
   } catch (error) {
-    console.error("Gemini API Error:", error);
+    console.error("Gemini API Error details:", error);
     throw new Error("Failed to analyze content using AI.");
   }
 }

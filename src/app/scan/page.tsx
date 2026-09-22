@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Shield, AlertTriangle, CheckCircle, ArrowRight, ArrowLeft, Loader2, Upload, File as FileIcon, X } from 'lucide-react';
+import { Shield, AlertTriangle, CheckCircle, ArrowRight, ArrowLeft, Loader2, Upload, File as FileIcon, X, FileText, MessageCircle, ExternalLink, Ban } from 'lucide-react';
 import Link from 'next/link';
 
 type AppState = 'IDLE' | 'SCANNING' | 'RESULT' | 'ERROR';
@@ -17,6 +17,13 @@ interface ScanResult {
   };
   red_flags: string[];
   executive_summary: string;
+  ioc_breakdown?: {
+    suspicious_urls: string[];
+    suspicious_emails: string[];
+    suspicious_phrases: string[];
+  };
+  remediation_steps?: string[];
+  official_report_draft?: string;
 }
 
 export default function ScannerDashboard() {
@@ -24,6 +31,7 @@ export default function ScannerDashboard() {
   const [inputContent, setInputContent] = useState('');
   const [scanStep, setScanStep] = useState(0);
   const [result, setResult] = useState<ScanResult | null>(null);
+  const [showReport, setShowReport] = useState(false);
   
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -68,6 +76,7 @@ export default function ScannerDashboard() {
     setAppState('SCANNING');
     setScanStep(0);
     setResult(null);
+    setShowReport(false);
 
     try {
       let response;
@@ -270,12 +279,114 @@ export default function ScannerDashboard() {
                       </div>
                     ))}
                   </div>
-                )}
+                 )}
+              </div>
+
+             {/* Deep IOC Breakdown */}
+             {result.ioc_breakdown && (
+               <div className="p-8 bg-slate-50 border-t border-slate-100">
+                 <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
+                   <Shield className="w-5 h-5 text-indigo-500" /> Technical Indicators (IOCs)
+                 </h3>
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                   <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                     <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Suspicious URLs</p>
+                     {result.ioc_breakdown.suspicious_urls.length > 0 ? (
+                       <ul className="list-disc pl-4 space-y-1">
+                         {result.ioc_breakdown.suspicious_urls.map((url, i) => (
+                           <li key={i} className="text-sm font-mono text-rose-600 break-all">{url}</li>
+                         ))}
+                       </ul>
+                     ) : <p className="text-sm text-slate-500">None detected</p>}
+                   </div>
+                   <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                     <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Suspicious Emails</p>
+                     {result.ioc_breakdown.suspicious_emails.length > 0 ? (
+                       <ul className="list-disc pl-4 space-y-1">
+                         {result.ioc_breakdown.suspicious_emails.map((email, i) => (
+                           <li key={i} className="text-sm font-mono text-rose-600 break-all">{email}</li>
+                         ))}
+                       </ul>
+                     ) : <p className="text-sm text-slate-500">None detected</p>}
+                   </div>
+                   <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm md:col-span-2">
+                     <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Malicious Phrasing Matches</p>
+                     {result.ioc_breakdown.suspicious_phrases.length > 0 ? (
+                       <div className="flex flex-wrap gap-2">
+                         {result.ioc_breakdown.suspicious_phrases.map((phrase, i) => (
+                           <span key={i} className="px-3 py-1 bg-rose-50 text-rose-700 border border-rose-100 rounded-md text-xs font-medium">"{phrase}"</span>
+                         ))}
+                       </div>
+                     ) : <p className="text-sm text-slate-500">None detected</p>}
+                   </div>
+                 </div>
+               </div>
+             )}
+
+             {/* Actionable Remediation Checklist */}
+             {result.remediation_steps && result.remediation_steps.length > 0 && (
+               <div className="p-8 bg-white border-t border-slate-100">
+                 <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                   <CheckCircle className="w-5 h-5 text-emerald-500" /> Recommended Action Plan
+                 </h3>
+                 <div className="space-y-3">
+                   {result.remediation_steps.map((step, idx) => (
+                     <label key={idx} className="flex items-start gap-3 p-3 rounded-lg hover:bg-slate-50 transition-colors cursor-pointer border border-transparent hover:border-slate-100">
+                       <input type="checkbox" className="mt-1 w-4 h-4 text-emerald-500 rounded border-slate-300 focus:ring-emerald-500" />
+                       <span className="text-sm text-slate-700 font-medium">{step}</span>
+                     </label>
+                   ))}
+                 </div>
+               </div>
+             )}
+
+             {/* Report Action Center */}
+             <div className="p-8 bg-slate-900 text-white flex flex-col gap-4">
+                <h3 className="text-lg font-bold text-white mb-2">Report Action Center</h3>
+                
+                <div className="flex flex-wrap gap-3">
+                  <button className="flex-1 flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-sm font-semibold px-4 py-3 rounded-xl transition-colors">
+                    <Ban className="w-4 h-4 text-rose-400" /> Block Sender
+                  </button>
+                  <button className="flex-1 flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-sm font-semibold px-4 py-3 rounded-xl transition-colors">
+                    <ExternalLink className="w-4 h-4 text-indigo-400" /> Report to SafeBrowsing
+                  </button>
+                  <a 
+                    href={`https://wa.me/917310347742?text=${encodeURIComponent(`🚨 THREAT ALERT: ${result.risk_category} (${result.threat_index}%)\nType: ${result.scam_classification}\n\nSummary: ${result.executive_summary}`)}`} 
+                    target="_blank" 
+                    rel="noreferrer"
+                    className="flex-1 flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-sm font-semibold px-4 py-3 rounded-xl transition-colors shadow-lg shadow-emerald-900/20"
+                  >
+                    <MessageCircle className="w-4 h-4" /> Share via WhatsApp
+                  </a>
+                </div>
+
+                <div className="mt-4 border-t border-slate-700 pt-6">
+                  <button 
+                    onClick={() => setShowReport(!showReport)}
+                    className="w-full flex items-center justify-center gap-2 bg-[#F1651A] hover:bg-[#d95a16] text-white font-bold px-6 py-4 rounded-xl shadow-lg transition-all"
+                  >
+                    <FileText className="w-5 h-5" /> {showReport ? "Hide Cybercrime Report" : "Generate Official Cybercrime Complaint"}
+                  </button>
+
+                  {showReport && result.official_report_draft && (
+                    <div className="mt-6 bg-slate-800 border border-slate-700 p-6 rounded-xl relative">
+                      <div className="absolute -top-3 left-6 bg-slate-900 px-2 text-xs font-bold tracking-widest text-slate-400">DRAFT COMPLAINT</div>
+                      <textarea 
+                        className="w-full bg-transparent text-slate-300 text-sm font-mono leading-relaxed resize-none focus:outline-none h-64"
+                        defaultValue={result.official_report_draft}
+                      />
+                      <div className="mt-4 flex justify-end">
+                        <button className="text-xs font-bold bg-white text-slate-900 px-4 py-2 rounded-lg hover:bg-slate-200">Copy to Clipboard</button>
+                      </div>
+                    </div>
+                  )}
+                </div>
              </div>
 
-             <div className="p-6 bg-slate-50 border-t border-slate-100 flex justify-center">
+             <div className="p-6 bg-slate-50 flex justify-center">
                 <button 
-                  onClick={() => { setAppState('IDLE'); setInputContent(''); setSelectedFile(null); }}
+                  onClick={() => { setAppState('IDLE'); setInputContent(''); setSelectedFile(null); setShowReport(false); }}
                   className="text-sm font-semibold text-slate-600 hover:text-slate-900 bg-white border border-slate-200 px-6 py-2 rounded-lg shadow-sm"
                 >
                   Scan Another Offer

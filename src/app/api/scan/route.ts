@@ -40,7 +40,8 @@ export async function POST(req: Request) {
     const latency = Date.now() - startTime;
 
     // 2. Log to Supabase (Fire and forget, don't await/block the response)
-    if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+    if (process.env.NEXT_PUBLIC_SUPABASE_URL && supabaseKey) {
       supabase
         .from('scans')
         .insert([{
@@ -78,7 +79,18 @@ export async function POST(req: Request) {
         "Requests for sensitive credentials or personal info",
         "Generic greeting instead of personalized name"
       ],
-      executive_summary: "This offer exhibits multiple high-risk factors including suspicious financial demands and domain spoofing. It matches known advance-fee fraud patterns."
+      executive_summary: "This offer exhibits multiple high-risk factors including suspicious financial demands and domain spoofing. It matches known advance-fee fraud patterns.",
+      ioc_breakdown: {
+        suspicious_urls: ["http://verify-account-update.xyz/login"],
+        suspicious_emails: ["hr-dept@gmail-security-alerts.com"],
+        suspicious_phrases: ["kindly transfer the refundable deposit", "your account will be permanently suspended in 24 hours"]
+      },
+      remediation_steps: [
+        "Do not click any embedded links or download attachments.",
+        "Block the sender's email address immediately.",
+        "If you provided any financial details, contact your bank to freeze the card."
+      ],
+      official_report_draft: "To Whom It May Concern:\n\nI am formally reporting a suspected cybercrime incident involving an advance-fee fraud attempt. On this date, I received a communication from the email address 'hr-dept@gmail-security-alerts.com' directing me to the malicious URL 'http://verify-account-update.xyz/login'.\n\nThe perpetrators attempted to coerce me into transferring funds under the guise of a 'refundable deposit' and utilized high-urgency tactics indicating my account would be suspended. I have retained all original communications and request this threat intelligence be logged into the national database to prevent further victimization."
     });
   }
 }

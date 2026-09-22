@@ -61,38 +61,9 @@ export async function POST(req: Request) {
     // 3. Return the AI analysis to the client
     return NextResponse.json(result);
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Scan API Error:', error);
-    
-    // Hackathon Demo Fallback: If Gemini API fails (e.g. missing Vercel env variables or Google outage),
-    // return a perfect mock response so the UI presentation still works flawlessly!
-    return NextResponse.json({
-      threat_index: 85,
-      risk_category: "High Risk",
-      scam_classification: "Pay-for-Equipment",
-      forensic_breakdown: {
-        financial_risk_detected: true,
-        domain_anomaly_detected: true,
-        urgency_tactic_detected: false
-      },
-      red_flags: [
-        "Urgent language demanding immediate action",
-        "Suspicious or unverified sender domain",
-        "Requests for sensitive credentials or personal info",
-        "Generic greeting instead of personalized name"
-      ],
-      executive_summary: "This offer exhibits multiple high-risk factors including suspicious financial demands and domain spoofing. It matches known advance-fee fraud patterns.",
-      ioc_breakdown: {
-        suspicious_urls: ["http://verify-account-update.xyz/login"],
-        suspicious_emails: ["hr-dept@gmail-security-alerts.com"],
-        suspicious_phrases: ["kindly transfer the refundable deposit", "your account will be permanently suspended in 24 hours"]
-      },
-      remediation_steps: [
-        "Do not click any embedded links or download attachments.",
-        "Block the sender's email address immediately.",
-        "If you provided any financial details, contact your bank to freeze the card."
-      ],
-      official_report_draft: "To Whom It May Concern:\n\nI am formally reporting a suspected cybercrime incident involving an advance-fee fraud attempt. On this date, I received a communication from the email address 'hr-dept@gmail-security-alerts.com' directing me to the malicious URL 'http://verify-account-update.xyz/login'.\n\nThe perpetrators attempted to coerce me into transferring funds under the guise of a 'refundable deposit' and utilized high-urgency tactics indicating my account would be suspended. I have retained all original communications and request this threat intelligence be logged into the national database to prevent further victimization."
-    });
+    // Removed the mock fallback so you can see the real error!
+    return NextResponse.json({ error: error.message || "Failed to analyze content" }, { status: 500 });
   }
 }

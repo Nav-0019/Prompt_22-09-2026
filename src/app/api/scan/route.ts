@@ -46,8 +46,8 @@ export async function POST(req: Request) {
         .insert([{
           input_type: inputType,
           threat_index: result.threat_index,
-          factors: result.detected_red_flags,
-          scam_type: result.scam_type_detected,
+          factors: result.red_flags,
+          scam_type: result.scam_classification,
           latency_ms: latency
         }])
         .then(({ error }) => {
@@ -65,14 +65,20 @@ export async function POST(req: Request) {
     // return a perfect mock response so the UI presentation still works flawlessly!
     return NextResponse.json({
       threat_index: 85,
-      scam_type_detected: "Phishing / Credential Theft",
-      detected_red_flags: [
+      risk_category: "High Risk",
+      scam_classification: "Pay-for-Equipment",
+      forensic_breakdown: {
+        financial_risk_detected: true,
+        domain_anomaly_detected: true,
+        urgency_tactic_detected: false
+      },
+      red_flags: [
         "Urgent language demanding immediate action",
         "Suspicious or unverified sender domain",
         "Requests for sensitive credentials or personal info",
         "Generic greeting instead of personalized name"
       ],
-      recommended_action: "Do not click any links or provide information. Report to IT Security immediately."
+      executive_summary: "This offer exhibits multiple high-risk factors including suspicious financial demands and domain spoofing. It matches known advance-fee fraud patterns."
     });
   }
 }

@@ -7,9 +7,14 @@ type AppState = 'IDLE' | 'SCANNING' | 'RESULT' | 'ERROR';
 
 interface ScanResult {
   threat_index: number;
-  risk_level: string;
-  detected_red_flags: string[];
-  scam_type_detected: string;
+  risk_category: string;
+  scam_classification: string;
+  forensic_breakdown: {
+    financial_risk_detected: boolean;
+    domain_anomaly_detected: boolean;
+    urgency_tactic_detected: boolean;
+  };
+  red_flags: string[];
   executive_summary: string;
 }
 
@@ -205,10 +210,34 @@ export default function ScannerDashboard() {
                 <div className="flex items-center justify-center gap-4">
                   <div className={`text-6xl font-black ${themeColor}`}>{result.threat_index}%</div>
                 </div>
-                <div className={`mt-2 text-xl font-bold ${themeColor}`}>{result.risk_level}</div>
-                {result.scam_type_detected !== 'None' && (
+                <div className={`mt-2 text-xl font-bold ${themeColor}`}>{result.risk_category}</div>
+                {result.scam_classification !== 'Legitimate Offer' && result.scam_classification !== 'None' && (
                   <div className="mt-4 inline-block px-4 py-1 bg-white rounded-full text-xs font-bold text-slate-700 shadow-sm border border-slate-200">
-                    Type: {result.scam_type_detected}
+                    Type: {result.scam_classification}
+                  </div>
+                )}
+             </div>
+
+             {/* Forensic Breakdown Badges */}
+             <div className="bg-slate-50 border-b border-slate-100 p-6 flex flex-wrap gap-3 justify-center">
+                {result.forensic_breakdown?.financial_risk_detected && (
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-100 text-rose-700 rounded-lg text-xs font-bold border border-rose-200">
+                    <Shield className="w-4 h-4" /> Financial Risk Detected
+                  </div>
+                )}
+                {result.forensic_breakdown?.domain_anomaly_detected && (
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-100 text-amber-700 rounded-lg text-xs font-bold border border-amber-200">
+                    <AlertTriangle className="w-4 h-4" /> Domain Anomaly
+                  </div>
+                )}
+                {result.forensic_breakdown?.urgency_tactic_detected && (
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-100 text-indigo-700 rounded-lg text-xs font-bold border border-indigo-200">
+                    <Shield className="w-4 h-4" /> High Urgency Tactic
+                  </div>
+                )}
+                {(!result.forensic_breakdown?.financial_risk_detected && !result.forensic_breakdown?.domain_anomaly_detected && !result.forensic_breakdown?.urgency_tactic_detected) && (
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-100 text-emerald-700 rounded-lg text-xs font-bold border border-emerald-200">
+                    <CheckCircle className="w-4 h-4" /> No Primary Forensic Anomalies
                   </div>
                 )}
              </div>
@@ -220,13 +249,13 @@ export default function ScannerDashboard() {
 
                 <h3 className="text-lg font-bold text-slate-800 mb-6">Identified Red Flags</h3>
                 
-                {!result.detected_red_flags || result.detected_red_flags.length === 0 ? (
+                {!result.red_flags || result.red_flags.length === 0 ? (
                   <div className="flex items-center gap-3 text-emerald-600 font-medium p-4 bg-emerald-50 rounded-xl">
                     <CheckCircle className="w-6 h-6" /> No significant scam indicators detected.
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {result.detected_red_flags.map((flag, idx) => (
+                    {result.red_flags.map((flag, idx) => (
                       <div key={idx} className="flex gap-4 p-4 rounded-xl border border-slate-100 bg-slate-50/50">
                         <div className="shrink-0 mt-1">
                           <AlertTriangle className="w-5 h-5 text-rose-500" />
